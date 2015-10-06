@@ -1,0 +1,13 @@
+{
+  "linters": {
+    "php": {
+       "type": "php"
+    },
+    "text": {
+      "type": "text"
+    },
+    "merges": {
+      "type": "merge-conflict"
+    }
+  }
+}
