@@ -66,10 +66,10 @@ final class ClangFormatLinter extends ArcanistExternalLinter {
       ->setLine(1)
       ->setChar(1)
       ->setGranularity(ArcanistLinter::GRANULARITY_FILE)
-      ->setCode('clang-format')
+      ->setCode('CFMT')
       ->setSeverity(ArcanistLintSeverity::SEVERITY_AUTOFIX)
-      ->setName('Autoformatted file.')
-      ->setDescription("'$path' has been autoformatted.")
+      ->setName('Code style violation')
+      ->setDescription("'$path' has code style errors.")
       ->setOriginalText($orig)
       ->setReplacementText($stdout);
     return array($message);
