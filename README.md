@@ -39,7 +39,9 @@ You can add this repository as a git submodule and in this case
 
 ```json
 {
-  "load": "path/to/submodule"
+  "load": [
+    "path/to/submodule"
+  ]
   // ...
 }
 ```
@@ -64,7 +66,9 @@ In this case you `.arcconfig` should look like
 
 ```json
 {
-  "load": "clang-format-linter"
+  "load": [
+    "clang-format-linter"
+  ]
   // ...
 }
 ```
@@ -79,7 +83,9 @@ git clone https://github.com/vhbit/clang-format-linter
 
 ```json
 {
-  "load": "~/.dev-tools/clang-format-linter"
+  "load": [
+    "~/.dev-tools/clang-format-linter"
+  ]
   // ...
 }
 ```
