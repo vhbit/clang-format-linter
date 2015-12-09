@@ -77,5 +77,3 @@ final class ClangFormatLinter extends ArcanistExternalLinter {
     return array($message);
   }
 }
-
-?>
