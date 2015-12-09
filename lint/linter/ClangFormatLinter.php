@@ -56,6 +56,8 @@ final class ClangFormatLinter extends ArcanistExternalLinter {
       return false;
     }
 
+    $root = $this->getProjectRoot();
+    $path = Filesystem::resolvePath($path, $root);
     $orig = file_get_contents($path);
     if ($orig == $stdout) {
       return array();
