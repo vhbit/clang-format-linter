@@ -1,5 +1,18 @@
 <?php
 
+
+final class ClangFormatReplacement {
+  public $offset, $length, $replacement;
+  public $line, $char;
+
+  public function __construct($offset, $length, $replacement)
+  {
+    $this->offset = $offset;
+    $this->length = $length;
+    $this->replacement = $replacement;
+  }
+}
+
 /**
  * Uses the clang format to format C/C++/Obj-C code
  */
@@ -26,10 +39,7 @@ final class ClangFormatLinter extends ArcanistExternalLinter {
   }
 
   public function getLinterConfigurationOptions() {
-    $options = array(
-    );
-
-    return $options + parent::getLinterConfigurationOptions();
+    return parent::getLinterConfigurationOptions();
   }
 
   public function getDefaultBinary() {
@@ -45,35 +55,82 @@ final class ClangFormatLinter extends ArcanistExternalLinter {
   }
 
   protected function getMandatoryFlags() {
-    return array(
-    );
+    $options = array('-output-replacements-xml');
+
+    return $options;
   }
 
   protected function parseLinterOutput($path, $err, $stdout, $stderr) {
-    $ok = ($err == 0);
+    $messages = array();
+    $errors = array();
 
-    if (!$ok) {
-      return false;
+    if ($err != 0) {
+      return $messages;
     }
 
+    /* Open original file */
     $root = $this->getProjectRoot();
     $path = Filesystem::resolvePath($path, $root);
     $orig = file_get_contents($path);
-    if ($orig == $stdout) {
-      return array();
+    /* Last parameter = true to retain line ending */
+    $lines = phutil_split_lines($orig, true);
+
+    $replacements = new SimpleXMLElement($stdout);
+
+    foreach ($replacements->replacement as $rep) {
+      $errors[] = new ClangFormatReplacement(intval($rep['offset']), intval($rep['length']), strval($rep));
     }
 
-    $message = id(new ArcanistLintMessage())
-      ->setPath($path)
-      ->setLine(1)
-      ->setChar(1)
-      ->setGranularity(ArcanistLinter::GRANULARITY_FILE)
-      ->setCode('CFMT')
-      ->setSeverity(ArcanistLintSeverity::SEVERITY_AUTOFIX)
-      ->setName('Code style violation')
-      ->setDescription("'$path' has code style errors.")
-      ->setOriginalText($orig)
-      ->setReplacementText($stdout);
-    return array($message);
+    if (count($errors) == 0) {
+      return $messages;
+    }
+
+    $cur_error = 0;
+    $error = $errors[0];
+    $line_num = 1;
+    $char_count = 0;
+
+    /* iterate on each file lines and match the errors to the current offset */
+    foreach($lines as $line) {
+
+      $line_length = strlen($line);
+
+      /* There may be multiple errors per lines, iterate until it matches */
+      while ($error->offset >= $char_count && $error->offset < ($char_count + $line_length)) {
+        /* Offset start from 1 in arcanist but 0 in clang-format, add 1 */
+        $line_char = $error->offset - $char_count + 1;
+
+        $message = id(new ArcanistLintMessage())
+          ->setPath($path)
+          ->setLine($line_num)
+          ->setChar($line_char)
+          ->setCode('CFMT')
+          ->setSeverity(ArcanistLintSeverity::SEVERITY_AUTOFIX)
+          ->setName('Code style violation')
+          ->setDescription("code style errors.")
+          ->setOriginalText(substr($orig, $error->offset, $error->length))
+          ->setReplacementText($error->replacement);
+
+        $messages[] = $message;
+
+        /* Next error */
+        $cur_error += 1;
+        $error = $errors[$cur_error];
+
+        /* We might have found all errors, early exit */
+        if ($cur_error == count($errors)) {
+          break;
+        }
+      }
+      /* We also ned to break out of this loop */
+      if ($cur_error == count($errors)) {
+        break;
+      }
+
+      $char_count = $char_count + $line_length;
+      $line_num += 1;
+    }
+
+    return $messages;
   }
 }
