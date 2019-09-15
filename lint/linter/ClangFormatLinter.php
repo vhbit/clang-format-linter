@@ -115,12 +115,13 @@ final class ClangFormatLinter extends ArcanistExternalLinter {
 
         /* Next error */
         $cur_error += 1;
-        $error = $errors[$cur_error];
 
         /* We might have found all errors, early exit */
         if ($cur_error == count($errors)) {
           break;
         }
+
+        $error = $errors[$cur_error];
       }
       /* We also ned to break out of this loop */
       if ($cur_error == count($errors)) {
