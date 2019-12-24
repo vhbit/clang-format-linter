@@ -60,6 +60,16 @@ final class ClangFormatLinter extends ArcanistExternalLinter {
     return $options;
   }
 
+  public function getVersion() {
+    list($stdout, $stderr) = execx(
+      '%C --version', $this->getExecutableCommand());
+    $matches = null;
+    if (preg_match('/clang-format version (\d(?:\.\d){2})/', $stdout, $matches)) {
+      return $matches[1];
+    }
+    return null;
+  }
+
   protected function parseLinterOutput($path, $err, $stdout, $stderr) {
     $messages = array();
     $errors = array();
