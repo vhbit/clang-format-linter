@@ -74,7 +74,7 @@ final class ClangFormatLinter extends ArcanistExternalLinter {
     $messages = array();
     $errors = array();
 
-    if ($err != 0) {
+    if ($err != 0 || strlen($stdout) == 0) {
       return $messages;
     }
 
