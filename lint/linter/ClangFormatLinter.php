@@ -70,6 +70,16 @@ final class ClangFormatLinter extends ArcanistExternalLinter {
     return null;
   }
 
+  public function getDefaultMessageSeverity($code) {
+    /* change "autofix" severity to "error" in .arclint to format the entire
+     * file instead of the changed lines:
+     * "severity": {
+     *   "autofix": "error"
+     * }
+     */
+    return ArcanistLintSeverity::SEVERITY_AUTOFIX;
+  }
+
   protected function parseLinterOutput($path, $err, $stdout, $stderr) {
     $messages = array();
     $errors = array();
@@ -115,7 +125,7 @@ final class ClangFormatLinter extends ArcanistExternalLinter {
           ->setLine($line_num)
           ->setChar($line_char)
           ->setCode('CFMT')
-          ->setSeverity(ArcanistLintSeverity::SEVERITY_AUTOFIX)
+          ->setSeverity($this->getLintMessageSeverity("autofix"))
           ->setName('Code style violation')
           ->setDescription("code style errors.")
           ->setOriginalText(substr($orig, $error->offset, $error->length))
